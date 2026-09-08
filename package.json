@@ -1,0 +1,22 @@
+{
+  "name": "lld-practice-platform",
+  "version": "1.0.0",
+  "description": "LLD Practice Platform — Practice Low-Level Design with automated hybrid evaluation (Deterministic + LLM)",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "server": "npm --prefix server start",
+    "server:dev": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build"
+  },
+  "keywords": [
+    "lld",
+    "low-level-design",
+    "system-design",
+    "practice-platform",
+    "object-oriented-design"
+  ],
+  "author": "Manye Gupta",
+  "license": "ISC"
+}
