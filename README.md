@@ -1,193 +1,162 @@
 # LLD Practice Platform
 
-A structured practice environment for Low-Level Design problems with AI-powered feedback. Submit your design for systems like Parking Lot, Elevator, and Vending Machine — get instant structural analysis and rich AI design review.
+A focused practice platform for Low-Level Design (LLD) interview preparation. It helps engineers move beyond passively reading system design solutions by letting them structure class models, relationships, and design trade-offs, submit them, and receive explainable feedback combining deterministic checks with AI review.
 
-> **CipherSchools 2-Day Engineering Assignment**
-
----
-
-## ✨ Features
-
-- **Curated LLD Problems** — Parking Lot, Elevator System, and Vending Machine with detailed requirements and context
-- **Structured Design Submission** — Define classes (with responsibilities & attributes), relationships (with types), and design decisions
-- **Two-Layer Evaluation**
-  - *Deterministic*: Entity coverage, relationship analysis, SRP checks, completeness scoring
-  - *AI-Powered*: Gemini API-based qualitative review of SOLID adherence, abstraction quality, extensibility, and naming
-- **Graceful Degradation** — Works without an API key using deterministic-only evaluation
-- **Attempt History** — Track score progression across multiple attempts per problem
-- **Categorized Feedback** — Feedback items tagged by category and severity (positive / suggestion / warning / critical)
+Built as an engineering assignment for CipherSchools by **Manye Gupta** (The LNM Institute of Information Technology).
 
 ---
 
-## 🛠️ Tech Stack
+## The Problem: Why LLD Practice is Broken
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18 + Vite, Tailwind CSS |
-| **Backend** | Node.js + Express |
-| **Database** | SQLite (via better-sqlite3) |
-| **AI Evaluation** | Google Gemini API |
-| **Language** | JavaScript (ES Modules) |
+When preparing for low-level design / machine coding rounds (Parking Lot, Elevator System, Vending Machine):
+- **LeetCode / coding platforms** only check unit test passes and execution output. A piece of code can pass all tests while completely violating SRP, having rigid coupling, or missing key domain abstractions.
+- **YouTube walkthroughs and blogs** are passive. Reading a senior engineer's solution makes intuitive sense, but when given a blank slate, learners struggle to structure classes, pick design patterns, or identify edge cases.
+- **Generic LLM prompts** in ChatGPT/Claude are unstructured. There is no historical tracking, no baseline rubric, and scores fluctuate wildly between runs.
 
----
-
-## 📋 Prerequisites
-
-- **Node.js 18+** and npm
-- *(Optional)* Google Gemini API key — for AI-powered feedback. Without it, the platform provides deterministic evaluation only.
-
----
-
-## 🚀 Setup & Running
-
-```bash
-# Clone the repository
-git clone <repo-url>
-cd lld-practice-platform
-
-# Install backend dependencies
-cd server
-npm install
-
-# Install frontend dependencies
-cd ../client
-npm install
+This project bridges that gap by implementing a complete practice loop:
 ```
-
-### Configure Environment (Optional)
-
-Create a `.env` file in the `server/` directory:
-
-```env
-# Optional — enables AI-powered design feedback
-# Without this, the platform still works with deterministic-only evaluation
-GEMINI_API_KEY=your_api_key_here
-
-# Server configuration (defaults shown)
-PORT=3001
-```
-
-### Start the Application
-
-```bash
-# Terminal 1 — Start the backend
-cd server
-npm run dev
-# Server runs at http://localhost:3001
-
-# Terminal 2 — Start the frontend
-cd client
-npm run dev
-# Client runs at http://localhost:5173
-```
-
-Open **http://localhost:5173** in your browser.
-
----
-
-## 🎯 How It Works
-
-```
-1. CHOOSE      → Pick an LLD problem (Parking Lot, Elevator, Vending Machine)
-2. READ        → Study the requirements and context
-3. DESIGN      → Define your classes, relationships, and design decisions
-4. SUBMIT      → Send your structured solution for evaluation
-5. REVIEW      → View your score, strengths, improvements, and categorized feedback
-6. ITERATE     → Refine your design based on feedback and submit again
-7. TRACK       → See your score progression across attempts
+Choose Problem -> Define Classes & Relationships -> Submit -> Receive Structured Feedback -> Review History -> Iterate
 ```
 
 ---
 
-## 📁 Project Structure
+## How Evaluation Works (Two-Layer Hybrid Approach)
+
+Rather than treating AI as a black box, the platform uses a two-tier evaluation engine orchestrated via the **Strategy Pattern**:
+
+### 1. Deterministic Evaluator (Fast, Objective Baseline)
+Runs locally in milliseconds with zero external API dependencies:
+- **Entity Coverage (30%)**: Checks if key domain entities (e.g., `ParkingFloor`, `ParkingSpot`, `Ticket`, `PaymentProcessor`) are present.
+- **Relationship Integrity (25%)**: Validates that classes are interconnected and relationship types (composition, aggregation, inheritance, association) are specified.
+- **Responsibility Distribution & SRP (25%)**: Flags god classes with bloated responsibilities (>5 methods/responsibilities) and warns on empty classes.
+- **Completeness & Modularity (20%)**: Verifies multi-class abstraction and structural depth.
+
+### 2. LLM Evaluator (Qualitative Design Review)
+Uses Google's Gemini API with a structured rubric to evaluate nuanced design decisions:
+- Adherence to SOLID principles and clean abstraction boundaries.
+- Appropriateness of design patterns (Strategy for pricing, State for vending machine, Observer for displays).
+- Extensibility under new requirements.
+- Returns strengths, specific recommendations, and categorized issues with severity levels (`positive`, `suggestion`, `warning`, `critical`).
+
+### 3. Composite Orchestrator & Graceful Fallback
+`CompositeEvaluator` runs the deterministic checks first, attempts the LLM review, and computes a weighted score (40% deterministic, 60% LLM). 
+**Crucially, if the API key is absent or times out, the platform degrades gracefully to 100% deterministic evaluation.** The learner is never blocked.
+
+---
+
+## Tech Stack & Architecture
+
+- **Backend**: Node.js + Express (ES Modules)
+- **Persistence**: SQLite via `better-sqlite3` (Zero-setup file database, storing structured JSON payloads inside relational rows)
+- **Frontend**: React 18, Vite, React Router, Custom Responsive CSS
+- **Testing**: Node.js Native Test Runner (`node:test`, `assert/strict`)
+- **AI Integration**: Google Gemini API (`gemini-2.0-flash`)
+
+### Project Structure
 
 ```
 lld-practice-platform/
-├── client/                     # React frontend
-│   ├── src/
-│   │   ├── components/         # UI components
-│   │   │   ├── ProblemList/     # Problem selection grid
-│   │   │   ├── ProblemDetail/   # Requirements view
-│   │   │   ├── SubmissionForm/  # Structured design editor
-│   │   │   ├── FeedbackPanel/   # Evaluation results display
-│   │   │   └── AttemptHistory/  # Score progression timeline
-│   │   ├── services/           # API client
-│   │   ├── hooks/              # Custom React hooks
-│   │   └── App.jsx             # Routing and layout
-│   └── package.json
-│
-├── server/                     # Express backend
-│   ├── src/
-│   │   ├── models/             # Domain model classes
-│   │   │   ├── Problem.js
-│   │   │   ├── Attempt.js
-│   │   │   ├── Submission.js
-│   │   │   ├── Evaluation.js
-│   │   │   └── FeedbackItem.js
-│   │   ├── evaluators/         # Evaluation strategy implementations
-│   │   │   ├── Evaluator.js              # Abstract base class
-│   │   │   ├── DeterministicEvaluator.js # Rule-based structural analysis
-│   │   │   ├── LLMEvaluator.js           # Gemini API integration
-│   │   │   └── CompositeEvaluator.js     # Orchestration + merging
-│   │   ├── routes/             # Express route handlers
-│   │   ├── data/               # Seed data (problems)
-│   │   └── db/                 # SQLite setup and queries
-│   └── package.json
-│
+├── package.json                  # Root runner scripts
+├── README.md                     # Project overview and setup guide
+├── AI_USAGE.md                   # 5 documented AI-assisted engineering decisions
 ├── docs/
-│   ├── research_note.md        # Learner problem analysis & existing approaches
-│   └── design_note.md          # MVP design: domain model, evaluation, trade-offs
-│
-├── AI_USAGE.md                 # AI-assisted decision log
-└── README.md                   # This file
+│   ├── research_note.md          # Analysis of existing LLD tools & identified gaps
+│   └── design_note.md            # Domain model, user flow, and design trade-offs
+├── server/
+│   ├── src/
+│   │   ├── domain/               # Core domain entities: Problem, Attempt, Submission, Evaluation
+│   │   ├── evaluation/           # Evaluator interface, Deterministic, LLM, Composite strategies
+│   │   ├── repository/           # Repository pattern data access layer
+│   │   ├── services/             # PracticeService and EvaluationService
+│   │   ├── api/                  # Express routes (/problems, /attempts, /submissions)
+│   │   ├── seed/                 # Curated problems (Parking Lot, Elevator, Vending Machine)
+│   │   ├── db.js                 # SQLite database setup
+│   │   └── app.js                # Express app entry point
+│   ├── tests/                    # Automated unit and integration tests
+│   │   ├── domain/               # Submission model tests
+│   │   └── evaluation/           # Deterministic & Composite evaluator tests
+│   └── package.json
+└── client/
+    ├── src/
+    │   ├── components/           # DesignEditor, FeedbackPanel, LoadingSpinner
+    │   ├── pages/                # HomePage, PracticePage, HistoryPage
+    │   ├── api.js                # Frontend API client
+    │   ├── App.jsx & App.css     # App layout and custom styles
+    │   └── main.jsx              # React DOM root mount
+    ├── vite.config.js
+    └── package.json
 ```
 
 ---
 
-## 🏗️ Key Design Decisions
+## Getting Started
 
-### 1. Structured Submissions over Free-text
-Learners define classes, relationships, and decisions in a structured format rather than describing their design in prose. This enables programmatic evaluation (entity matching, SRP checks) and meaningful comparison between attempts. The slight input friction is worth the dramatically better feedback quality.
+### Prerequisites
+- Node.js (version 18 or higher)
+- npm
 
-### 2. Two-Layer Evaluation Pipeline
-- **Deterministic layer** — instant, reproducible, always available. Catches structural issues (missing entities, undefined relationships, overloaded classes).
-- **LLM layer** — rich, qualitative, best-effort. Evaluates design principles, abstraction quality, and extensibility.
-- **Composite orchestration** — runs both, merges results (40% deterministic / 60% LLM). Degrades gracefully to deterministic-only if AI is unavailable.
+### Installation & Setup
 
-### 3. Strategy Pattern for Evaluation
-Evaluators implement a common interface (`evaluate(submission, problem) → Evaluation`), making it trivial to add new evaluation strategies (peer review, diagram-based, etc.) without modifying existing code.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Manye3/lld-practice-platform.git
+   cd lld-practice-platform
+   ```
 
-### 4. SQLite for Zero-Setup Persistence
-A file-based database that requires no infrastructure. Submission data (nested classes, relationships) is stored as JSON within relational rows — a pragmatic hybrid for a prototype.
+2. **Install all dependencies:**
+   ```bash
+   npm run install:all
+   ```
 
-### 5. localStorage-Based Identity
-No authentication. A UUID is generated on first visit and stored in localStorage. Removes all friction for trying the platform. Acceptable trade-off for an MVP where cross-device continuity isn't critical.
+3. **(Optional) Configure Gemini API Key:**
+   To enable qualitative AI feedback, add your API key in `server/.env`:
+   ```bash
+   GEMINI_API_KEY=your_gemini_api_key_here
+   PORT=3001
+   ```
+   *Note: If no key is configured, the platform will continue running seamlessly in deterministic evaluation mode.*
+
+4. **Run Automated Tests:**
+   ```bash
+   npm test
+   ```
+   Runs 10 unit and integration tests covering domain validations, SRP detection, and evaluator fallbacks.
+
+5. **Start the Platform:**
+   In one terminal, start the backend server:
+   ```bash
+   npm run server:dev
+   ```
+   In a second terminal, start the frontend development client:
+   ```bash
+   npm run client
+   ```
+   Open **http://localhost:5173** in your browser.
 
 ---
 
-## ⚠️ Known Limitations
+## Key Design Decisions & Trade-offs
 
-- **Single-user prototype** — SQLite and localStorage don't support multi-user or cross-device usage
-- **No real-time collaboration** — Designed for individual practice, not team exercises
-- **LLM score variance** — AI scores may vary slightly between identical submissions due to model non-determinism
-- **Limited problem set** — Ships with 3 problems; adding more requires seed data updates
-- **No diagram input** — Learners define design via form, not UML diagrams
-- **No code validation** — The platform evaluates design, not code correctness
-
----
-
-## 🔮 Future Improvements
-
-- **More problems** — Library Management, ATM, Snake & Ladder, Tic-Tac-Toe
-- **UML diagram input** — Accept PlantUML or visual diagramming as submission format
-- **Peer review** — Let learners review each other's designs
-- **Code generation** — Generate skeleton code from submitted designs
-- **Authentication** — OAuth for cross-device attempt history
-- **Leaderboard** — Compare anonymized scores across learners
-- **Export** — Download feedback as PDF for interview prep
+1. **Structured Input vs. Free-form Markdown:**
+   We chose a structured class/relationship/decision editor over a plain text box. While structured forms have slightly more input friction, they allow unambiguous static analysis of class coupling and SRP, make diffing between attempts possible, and provide cleaner prompt context to the LLM.
+2. **Monolith vs. Microservices:**
+   Built as a clean modular monolith. For an MVP targeted at individual learning loops, microservices or distributed queues introduce unnecessary operational overhead.
+3. **Client-side Session Identity (localStorage UUID):**
+   To let learners jump straight into practicing without a mandatory signup gate, learner identities are generated as UUIDs stored in browser localStorage.
 
 ---
 
-## 📄 License
+## Submission Artifacts
 
-MIT
+- **Research Note**: Located in [`docs/research_note.md`](docs/research_note.md)
+- **Design Note**: Located in [`docs/design_note.md`](docs/design_note.md)
+- **AI Decision Log**: Located in [`AI_USAGE.md`](AI_USAGE.md)
+
+---
+
+## Author
+
+**Manye Gupta**  
+- GitHub: [@Manye3](https://github.com/Manye3)  
+- LinkedIn: [linkedin.com/in/manyegupta](https://www.linkedin.com/in/manyegupta/)  
+- Email: manyegupta0301@gmail.com  
